@@ -1,0 +1,26 @@
+# Backend
+backend/target/
+backend/.mvn/
+backend/*.iml
+backend/.idea/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# AI Service
+ai-service/venv/
+ai-service/__pycache__/
+ai-service/.env
+ai-service/*.pyc
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Env
+.env
+*.log
