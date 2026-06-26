@@ -5,10 +5,12 @@ import {
   CardBody,
   CardHeader,
   Button,
+  useDisclosure,
 } from '@nextui-org/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { apiService, Post, Category, Tag, PostStatus } from '../services/apiService';
 import PostForm from '../components/PostForm';
+import GenerateModal from '../components/GenerateModal';
 
 const EditPostPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,9 @@ const EditPostPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // AI generation modal
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +88,32 @@ const EditPostPage: React.FC = () => {
     }
   };
 
+  const handleAiGenerated = (result: {
+    title: string;
+    content: string;
+    suggestedTags: string[];
+  }) => {
+    // Match suggested tag names to existing DB tags (case-insensitive)
+    const matchedTagObjects = tags.filter(t =>
+      result.suggestedTags.some(s =>
+        s.toLowerCase() === t.name.toLowerCase()
+      )
+    );
+
+    // Build a post object to pre-fill the form
+    setPost({
+      id: id || '',
+      title: result.title,
+      content: result.content,
+      category: post?.category || { id: '', name: '', postCount: 0 },
+      tags: matchedTagObjects,
+      author: post?.author || { id: '', name: '' },
+      status: 'DRAFT' as PostStatus,
+      createdAt: post?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4">
@@ -116,6 +147,16 @@ const EditPostPage: React.FC = () => {
               {id ? 'Edit Post' : 'Create New Post'}
             </h1>
           </div>
+          {!id && (
+            <Button
+              color="secondary"
+              variant="flat"
+              startContent={<Sparkles size={16} />}
+              onPress={onOpen}
+            >
+              Generate with AI
+            </Button>
+          )}
         </CardHeader>
 
         <CardBody>
@@ -135,6 +176,12 @@ const EditPostPage: React.FC = () => {
           />
         </CardBody>
       </Card>
+
+      <GenerateModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onGenerated={handleAiGenerated}
+      />
     </div>
   );
 };

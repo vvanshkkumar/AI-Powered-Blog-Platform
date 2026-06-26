@@ -148,6 +148,16 @@ class ApiService {
     return response.data;
   }
 
+  // AI Generation
+  public async generatePost(topic: string): Promise<{
+    title: string;
+    content: string;
+    suggestedTags: string[];
+  }> {
+    const response = await this.api.post('/posts/generate', { topic });
+    return response.data;
+  }
+
   // Posts endpoints
   public async getPosts(params: {
     categoryId?: string;
