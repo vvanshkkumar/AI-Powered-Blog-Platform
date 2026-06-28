@@ -128,6 +128,53 @@ The app will be available at **http://localhost:5173**
 | POST | `/api/v1/tags` | Required | Create tags |
 | DELETE | `/api/v1/tags/:id` | Required | Delete tag |
 
+## Production Deployment (AWS EC2)
+
+### Quick Deploy with Docker Compose
+
+```bash
+# 1. Clone the repo on your server
+git clone https://github.com/vvanshkkumar/AI-Powered-Blog-Platform.git
+cd AI-Powered-Blog-Platform
+
+# 2. Create .env from template and fill in real values
+cp .env.production .env
+nano .env
+
+# 3. Build and start all services
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 4. Check everything is running
+docker compose -f docker-compose.prod.yml ps
+```
+
+The app will be available at **http://your-server-ip**
+
+### AWS EC2 Setup
+
+1. Launch **t3.small** (2 GB) or **t3.medium** (4 GB) with Amazon Linux 2023
+2. Security group: open ports **22** (SSH), **80** (HTTP), **443** (HTTPS)
+3. Allocate an **Elastic IP** and associate it
+4. SSH in and install Docker:
+   ```bash
+   sudo yum update -y
+   sudo yum install -y docker git
+   sudo systemctl enable docker && sudo systemctl start docker
+   sudo usermod -aG docker ec2-user
+   sudo mkdir -p /usr/local/lib/docker/cli-plugins
+   sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+     -o /usr/local/lib/docker/cli-plugins/docker-compose
+   sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+   ```
+5. Log out and back in, then follow "Quick Deploy" above
+
+### Optional: Domain + SSL
+
+```bash
+sudo yum install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
+```
+
 ## Project Structure
 
 ```
@@ -135,8 +182,10 @@ The app will be available at **http://localhost:5173**
 │   ├── agents.py          # LangGraph pipeline (5 nodes)
 │   ├── schemas.py         # Pydantic models + State
 │   ├── main.py            # FastAPI app
+│   ├── Dockerfile
 │   └── requirements.txt
 ├── backend/               # Spring Boot
+│   ├── Dockerfile
 │   └── src/main/java/com/vvanshkkumar/blog/
 │       ├── controllers/   # REST controllers
 │       ├── services/      # Business logic
@@ -144,13 +193,18 @@ The app will be available at **http://localhost:5173**
 │       ├── repositories/  # JPA repositories
 │       ├── security/      # JWT auth
 │       └── config/        # App + Security config
-└── frontend/              # React + Vite
-    └── src/
-        ├── pages/         # Route pages
-        ├── components/    # Reusable components
-        └── services/      # API client
+├── frontend/              # React + Vite
+│   ├── Dockerfile
+│   └── src/
+│       ├── pages/         # Route pages
+│       ├── components/    # Reusable components
+│       └── services/      # API client
+├── nginx/nginx.conf       # Reverse proxy config
+├── docker-compose.prod.yml
+└── .env.production        # Env var template
 ```
 
 ## License
 
 MIT
+
